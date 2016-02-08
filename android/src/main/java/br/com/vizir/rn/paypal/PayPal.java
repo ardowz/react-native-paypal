@@ -3,6 +3,8 @@ package br.com.vizir.rn.paypal;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.util.Log;
 
 import com.facebook.react.bridge.Callback;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -13,6 +15,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.paypal.android.sdk.payments.PayPalAuthorization;
 import com.paypal.android.sdk.payments.PayPalConfiguration;
 import com.paypal.android.sdk.payments.PayPalPayment;
+import com.paypal.android.sdk.payments.PayPalFuturePaymentActivity;
 import com.paypal.android.sdk.payments.PayPalService;
 import com.paypal.android.sdk.payments.PaymentActivity;
 import com.paypal.android.sdk.payments.PaymentConfirmation;
@@ -58,6 +61,34 @@ public class PayPal extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void futurePaymentRequest(
+    final ReadableMap payPalParameters,
+    final Callback successCallback,
+    final Callback errorCallback
+  ) {
+    this.successCallback = successCallback;
+    this.errorCallback = errorCallback;
+
+    final String environment = payPalParameters.getString("environment");
+    final String clientId = payPalParameters.getString("clientId");
+
+    PayPalConfiguration config =
+            new PayPalConfiguration().environment(environment).clientId(clientId)
+                    .merchantName("Studypool")
+                    .merchantPrivacyPolicyUri(Uri.parse("https://www.studypool.com"))
+                    .merchantUserAgreementUri(Uri.parse("https://www.studypool.com"));
+
+    startPayPalService(config);
+
+    Intent intent =
+            new Intent(activityContext, PayPalFuturePaymentActivity.class)
+                    .putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION, config);
+
+
+    currentActivity.startActivityForResult(intent, paymentIntentRequestCode);
+  }
+
+  @ReactMethod
   public void paymentRequest(
     final ReadableMap payPalParameters,
     final Callback successCallback,
@@ -99,13 +130,26 @@ public class PayPal extends ReactContextBaseJavaModule {
     if (requestCode != paymentIntentRequestCode) { return; }
 
     if (resultCode == Activity.RESULT_OK) {
-      PaymentConfirmation confirm =
-        data.getParcelableExtra(PaymentActivity.EXTRA_RESULT_CONFIRMATION);
-      if (confirm != null) {
-        successCallback.invoke(
-          confirm.toJSONObject().toString(),
-          confirm.getPayment().toJSONObject().toString()
-        );
+      PayPalAuthorization auth = data
+              .getParcelableExtra(PayPalFuturePaymentActivity.EXTRA_RESULT_AUTHORIZATION);
+      if (auth != null) {
+        try {
+          successCallback.invoke(
+                  "testing 1234"
+          );
+          String authorization_code = auth.getAuthorizationCode();
+
+//          confirm.toJSONObject().toString(),
+//                  confirm.getPayment().toJSONObject().toString()
+
+//          Log.e("FuturePaymentExample", "an extremely unlikely failure occurred: ", e);
+//          successCallback.invoke(
+//                  authorization_code.toJSONObject().toString()
+//          );
+          Log.d("FuturePaymentExample", "Auth Code: " + authorization_code);
+        } catch (Exception e) {
+          Log.e("FuturePaymentExample", "an extremely unlikely failure occurred: ", e);
+        }
       }
     } else if (resultCode == Activity.RESULT_CANCELED) {
       errorCallback.invoke(ERROR_USER_CANCELLED);

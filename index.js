@@ -11,6 +11,11 @@ var functions = {
     return new Promise(function(resolve, reject) {
       PayPal.paymentRequest(payPalParameters, resolve, reject);
     });
+  },
+  futurePaymentRequest(payPalParameters) {
+    return new Promise(function(resolve, reject) {
+      PayPal.futurePaymentRequest(payPalParameters, resolve, reject);
+    });
   }
 };
 
