@@ -72,11 +72,15 @@ public class PayPal extends ReactContextBaseJavaModule {
     final String environment = payPalParameters.getString("environment");
     final String clientId = payPalParameters.getString("clientId");
 
+    final String merchantName = payPalParameters.getString("merchantName");
+    final String privacyPolicy = payPalParameters.getString("privacyPolicyURL");
+    final String userAgreement = payPalParameters.getString("userAgreementURL");
+
     PayPalConfiguration config =
             new PayPalConfiguration().environment(environment).clientId(clientId)
-                    .merchantName("Studypool")
-                    .merchantPrivacyPolicyUri(Uri.parse("https://www.studypool.com"))
-                    .merchantUserAgreementUri(Uri.parse("https://www.studypool.com"));
+                    .merchantName(merchantName)
+                    .merchantPrivacyPolicyUri(Uri.parse(privacyPolicy))
+                    .merchantUserAgreementUri(Uri.parse(userAgreement));
 
     startPayPalService(config);
 

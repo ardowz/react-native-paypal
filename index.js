@@ -44,7 +44,32 @@ var functions = {
   },
   futurePaymentRequest(payPalParameters) {
     return new Promise(function(resolve, reject) {
-      PayPal.futurePaymentRequest(payPalParameters, resolve, reject);
+      if (Platform.OS === 'android') {
+        PayPal.futurePaymentRequest(payPalParameters, resolve, reject);
+      } else {
+        MFLReactNativePayPal.initializePaypalEnvironment(payPalParameters.environment, payPalParameters.clientId);
+        MFLReactNativePayPal.prepareConfigurationForMerchant(payPalParameters.merchantName, payPalParameters.privacyPolicyURL, payPalParameters.userAgreementURL);
+
+        MFLReactNativePayPal.presentPaymentViewControllerForPreparedPurchase((payload, error) => {
+            if (payload) {
+              var payload = JSON.parse(payload);
+              if (payload.response_type == 'authorization_code') {
+                resolve(payload);
+                //var authCode = payload.response.code;
+                //console.log(authCode);
+              } else {
+                reject(constants.USER_CANCELLED, payload);
+                //console.log("User cancelled payment");
+              }
+            } else {
+              reject(constants.INVALID_CONFIG, error)
+              //console.log(error);
+              //return;
+            }
+        });
+
+      }
+
     });
   }
 };
