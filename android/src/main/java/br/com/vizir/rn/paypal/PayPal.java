@@ -94,9 +94,9 @@ public class PayPal extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void paymentRequest(
-    final ReadableMap payPalParameters,
-    final Callback successCallback,
-    final Callback errorCallback
+          final ReadableMap payPalParameters,
+          final Callback successCallback,
+          final Callback errorCallback
   ) {
     this.successCallback = successCallback;
     this.errorCallback = errorCallback;
@@ -108,18 +108,18 @@ public class PayPal extends ReactContextBaseJavaModule {
     final String description = payPalParameters.getString("description");
 
     PayPalConfiguration config =
-      new PayPalConfiguration().environment(environment).clientId(clientId);
+            new PayPalConfiguration().environment(environment).clientId(clientId);
 
     startPayPalService(config);
 
     PayPalPayment thingToBuy =
-      new PayPalPayment(new BigDecimal(price), currency, description,
-                        PayPalPayment.PAYMENT_INTENT_SALE);
+            new PayPalPayment(new BigDecimal(price), currency, description,
+                    PayPalPayment.PAYMENT_INTENT_SALE);
 
     Intent intent =
-      new Intent(activityContext, PaymentActivity.class)
-      .putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION, config)
-      .putExtra(PaymentActivity.EXTRA_PAYMENT, thingToBuy);
+            new Intent(activityContext, PaymentActivity.class)
+                    .putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION, config)
+                    .putExtra(PaymentActivity.EXTRA_PAYMENT, thingToBuy);
 
     currentActivity.startActivityForResult(intent, paymentIntentRequestCode);
   }
@@ -130,6 +130,7 @@ public class PayPal extends ReactContextBaseJavaModule {
     currentActivity.startService(intent);
   }
 
+
   public void handleActivityResult(final int requestCode, final int resultCode, final Intent data) {
     if (requestCode != paymentIntentRequestCode) { return; }
 
@@ -139,18 +140,11 @@ public class PayPal extends ReactContextBaseJavaModule {
       if (auth != null) {
         try {
           successCallback.invoke(
-                  "testing 1234"
+                  auth.toJSONObject().toString(),
+                  auth.getAuthorizationCode()
           );
-          String authorization_code = auth.getAuthorizationCode();
-
-//          confirm.toJSONObject().toString(),
-//                  confirm.getPayment().toJSONObject().toString()
-
-//          Log.e("FuturePaymentExample", "an extremely unlikely failure occurred: ", e);
-//          successCallback.invoke(
-//                  authorization_code.toJSONObject().toString()
-//          );
-          Log.d("FuturePaymentExample", "Auth Code: " + authorization_code);
+//          String authorization_code = auth.getAuthorizationCode();
+//          Log.d("FuturePaymentExample", "Auth Code: " + authorization_code);
         } catch (Exception e) {
           Log.e("FuturePaymentExample", "an extremely unlikely failure occurred: ", e);
         }
@@ -163,4 +157,31 @@ public class PayPal extends ReactContextBaseJavaModule {
 
     currentActivity.stopService(new Intent(currentActivity, PayPalService.class));
   }
+
+
+
+  /*
+  //for make a payment only
+  public void handleActivityResult(final int requestCode, final int resultCode, final Intent data) {
+    if (requestCode != paymentIntentRequestCode) { return; }
+
+    if (resultCode == Activity.RESULT_OK) {
+      PaymentConfirmation confirm =
+              data.getParcelableExtra(PaymentActivity.EXTRA_RESULT_CONFIRMATION);
+      if (confirm != null) {
+        successCallback.invoke(
+                confirm.toJSONObject().toString(),
+                confirm.getPayment().toJSONObject().toString()
+        );
+      }
+    } else if (resultCode == Activity.RESULT_CANCELED) {
+      errorCallback.invoke(ERROR_USER_CANCELLED);
+    } else if (resultCode == PaymentActivity.RESULT_EXTRAS_INVALID) {
+      errorCallback.invoke(ERROR_INVALID_CONFIG);
+    }
+
+    currentActivity.stopService(new Intent(currentActivity, PayPalService.class));
+  }
+  */
+
 }
